@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "base": "/lore/",
-  "entries": [
-    { "file":"00001_origin.txt",     "title":"Origin",        "era":"Genesis",        "tags":["#origin","#beginning","#end","#convergence","#finality","#god","#event"] },
-    { "file":"00002_rust_wars.txt",  "title":"The Rust Wars", "era":"Age of Fracture","tags":["#faction","#war"] }
-  ]
-}
