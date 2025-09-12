@@ -1,0 +1,789 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextForge - Text Game Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'steam-dark': '#1b2838',
+                        'steam-blue': '#66c0f4',
+                        'steam-light': '#2a475e',
+                        'primary': '#FFFF00',
+                        'bg-red': '#2d0f0f',
+                        'panel-gray': '#2a2a2a',
+                        'button-gray': '#1a1a1a'
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'Consolas', 'monospace'],
+                        'display': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+        
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            background-attachment: fixed;
+        }
+        
+        .layered-bg {
+            position: relative;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 0, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .layered-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,0,0.03) 50%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        .game-card {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 1px solid rgba(255, 255, 0, 0.15);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 0, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 0, 0.5), transparent);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-4px) rotateX(2deg);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(255, 255, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 0, 0.15);
+            border-color: rgba(255, 255, 0, 0.3);
+        }
+        
+        .neo-button {
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 4px 15px rgba(26, 26, 26, 0.4),
+                inset 0 1px 0 rgba(255, 255, 0, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+        
+        .neo-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,0,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .neo-button:hover::before {
+            left: 100%;
+        }
+        
+        .neo-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 8px 25px rgba(26, 26, 26, 0.6),
+                inset 0 1px 0 rgba(255, 255, 0, 0.3);
+        }
+        
+        .neo-input {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border: 1px solid rgba(255, 255, 0, 0.1);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                0 1px 0 rgba(255, 255, 0, 0.1);
+            transition: all 0.3s ease;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+        
+        .neo-input:focus {
+            border-color: rgba(255, 255, 0, 0.5);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                0 0 0 2px rgba(255, 255, 0, 0.2),
+                0 0 15px rgba(255, 255, 0, 0.3);
+        }
+        
+        .header-glow {
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 0, 0.2);
+        }
+        
+        .tab-line {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-line::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FFFF00, transparent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .tab-line.active::after {
+            transform: scaleX(1);
+        }
+        
+        .genre-badge {
+            background: linear-gradient(135deg, rgba(255, 255, 0, 0.8), rgba(205, 205, 0, 0.8));
+            backdrop-filter: blur(10px);
+            clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            color: #000 !important;
+        }
+        
+        .loading-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(255, 255, 0, 0.4);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
+            }
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+        
+        .empty-state-icon {
+            filter: drop-shadow(0 0 10px rgba(255, 255, 0, 0.3));
+        }
+    </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body class="bg-gray-900 dark:bg-gray-900 text-white min-h-screen">
+    <!-- Header -->
+    <header class="header-glow px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-3xl font-display font-bold text-glow tracking-tight">TEXTFORGE</h1>
+                <span class="text-primary text-xs font-mono tracking-wider uppercase opacity-80">LIBRARY SYSTEM v2.1</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <input type="search" id="searchInput" placeholder="SEARCH ARCHIVES..." class="neo-input text-primary px-4 py-3 font-mono text-sm w-64 focus:outline-none placeholder:text-gray-500 placeholder:uppercase placeholder:tracking-wide">
+                    <div class="absolute right-4 top-3.5 text-gray-400 opacity-60">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <button id="refreshBtn" class="neo-button text-white px-6 py-3 font-mono text-xs uppercase tracking-wider font-medium">
+                    REFRESH
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Navigation Tabs -->
+        <div class="layered-bg mb-8 p-1">
+            <div class="flex space-x-1">
+                <button class="tab-line active py-4 px-6 font-mono text-xs uppercase tracking-widest transition-all duration-300 text-primary bg-gradient-to-r from-transparent to-transparent hover:from-gray-800 hover:to-transparent" data-tab="overview">
+                    OVERVIEW
+                </button>
+                <button class="tab-line py-4 px-6 font-mono text-xs uppercase tracking-widest transition-all duration-300 text-gray-400 hover:text-gray-200 bg-gradient-to-r from-transparent to-transparent hover:from-gray-800 hover:to-transparent" data-tab="categories">
+                    CATEGORIES
+                </button>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overviewSection">
+            <div class="layered-bg p-8 mb-8">
+                <div class="max-w-4xl">
+                    <h2 class="text-4xl font-display font-bold text-glow mb-4 uppercase tracking-wide">TEXTFORGE</h2>
+                    <p class="text-primary font-mono text-lg leading-relaxed mb-6">
+                        A curated collection of interactive text-based experiences. Immerse yourself in worlds built from words, where every choice shapes your narrative.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="layered-bg p-6">
+                            <h3 class="text-primary font-mono text-sm uppercase tracking-widest mb-2">TOTAL GAMES</h3>
+                            <p class="text-3xl font-display font-bold" id="totalGamesCount">0</p>
+                        </div>
+                        <div class="layered-bg p-6">
+                            <h3 class="text-primary font-mono text-sm uppercase tracking-widest mb-2">LAST UPDATED</h3>
+                            <p class="text-xl font-mono" id="lastUpdated">--/--/----</p>
+                        </div>
+                        <div class="layered-bg p-6">
+                            <h3 class="text-primary font-mono text-sm uppercase tracking-widest mb-2">REPOSITORY</h3>
+                            <p class="text-xl font-mono text-steam-blue">ACTIVE</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layered-bg p-8">
+                <h3 class="text-2xl font-display font-semibold text-gray-200 mb-6 uppercase tracking-wide">NEWS &amp; UPDATES</h3>
+                <div id="newsGrid" class="space-y-6">
+                    <!-- News items will be populated here -->
+                    <div class="layered-bg p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <h4 class="text-lg font-display font-medium text-primary uppercase tracking-wide">WELCOME TO TEXTFORGE</h4>
+                            <span class="text-xs text-gray-500 font-mono">2024-01-15</span>
+                        </div>
+                        <p class="text-gray-300 font-mono text-sm leading-relaxed">
+                            TextForge is now live! Browse our collection of immersive text-based games across multiple genres. 
+                            Each game offers unique storytelling experiences crafted by talented developers.
+                        </p>
+                    </div>
+                    
+                    <div class="layered-bg p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <h4 class="text-lg font-display font-medium text-primary uppercase tracking-wide">GENRE SYSTEM UPDATED</h4>
+                            <span class="text-xs text-gray-500 font-mono">2024-01-10</span>
+                        </div>
+                        <p class="text-gray-300 font-mono text-sm leading-relaxed">
+                            Games are now organized into four main categories: Survival, RPG, Adventure, and Narrative. 
+                            Click any category to explore games tailored to your preferred style of play.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        <div id="categoriesSection" class="hidden">
+            <div class="layered-bg p-8 mb-8">
+                <h2 class="text-3xl font-display font-bold text-glow mb-6 uppercase tracking-wide">GAME CATEGORIES</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="game-card cursor-pointer" onclick="filterByGenre('survival')">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-display font-medium text-white uppercase tracking-wide">SURVIVAL</h3>
+                                <div class="w-12 h-12 layered-bg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 font-mono text-sm mb-4">Endure harsh environments, manage resources, and fight for survival in unforgiving worlds.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="genre-badge text-xs px-3 py-1 font-mono tracking-wider" id="survivalCount">0 GAMES</span>
+                                <button class="neo-button px-4 py-2 font-mono text-xs uppercase tracking-wider">BROWSE</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="game-card cursor-pointer" onclick="filterByGenre('rpg')">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-display font-medium text-white uppercase tracking-wide">RPG</h3>
+                                <div class="w-12 h-12 layered-bg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 font-mono text-sm mb-4">Build characters, level up skills, and embark on epic quests in rich fantasy worlds.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="genre-badge text-xs px-3 py-1 font-mono tracking-wider" id="rpgCount">0 GAMES</span>
+                                <button class="neo-button px-4 py-2 font-mono text-xs uppercase tracking-wider">BROWSE</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="game-card cursor-pointer" onclick="filterByGenre('adventure')">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-display font-medium text-white uppercase tracking-wide">ADVENTURE</h3>
+                                <div class="w-12 h-12 layered-bg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 font-mono text-sm mb-4">Explore mysterious locations, solve puzzles, and uncover secrets in classic adventures.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="genre-badge text-xs px-3 py-1 font-mono tracking-wider" id="adventureCount">0 GAMES</span>
+                                <button class="neo-button px-4 py-2 font-mono text-xs uppercase tracking-wider">BROWSE</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="game-card cursor-pointer" onclick="filterByGenre('narrative')">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-display font-medium text-white uppercase tracking-wide">NARRATIVE</h3>
+                                <div class="w-12 h-12 layered-bg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 font-mono text-sm mb-4">Experience rich storytelling with branching narratives and meaningful character choices.</p>
+                            <div class="flex items-center justify-between">
+                                <span class="genre-badge text-xs px-3 py-1 font-mono tracking-wider" id="narrativeCount">0 GAMES</span>
+                                <button class="neo-button px-4 py-2 font-mono text-xs uppercase tracking-wider">BROWSE</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-16">
+            <div class="loading-glow w-16 h-16 mx-auto mb-6 relative">
+                <div class="absolute inset-0 border-2 border-primary opacity-20"></div>
+                <div class="absolute inset-1 border border-primary animate-pulse"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-2 h-2 bg-primary animate-pulse"></div>
+                </div>
+            </div>
+            <p class="text-gray-400 font-mono text-sm uppercase tracking-wider">SCANNING REPOSITORY...</p>
+        </div>
+
+        <!-- Survival Category Section -->
+        <div id="survivalSection" class="hidden">
+            <div class="layered-bg p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-glow mb-2 uppercase tracking-wide">SURVIVAL GAMES</h2>
+                        <p class="text-primary font-mono">Endure harsh environments, manage resources, and fight for survival in unforgiving worlds.</p>
+                    </div>
+                    <button onclick="switchTab('categories')" class="neo-button px-6 py-3 font-mono text-xs uppercase tracking-wider">
+                        ← BACK TO CATEGORIES
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <select id="survivalSortFilter" class="neo-input text-white px-3 py-2 font-mono text-xs uppercase tracking-wide focus:outline-none">
+                        <option value="name">SORT: NAME</option>
+                        <option value="date">SORT: DATE</option>
+                        <option value="size">SORT: SIZE</option>
+                    </select>
+                    <p id="survivalGameCount" class="text-gray-400 font-mono text-xs uppercase tracking-widest">0 ENTRIES FOUND</p>
+                </div>
+            </div>
+            <div id="survivalGameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Survival games will be populated here -->
+            </div>
+            <div id="survivalEmptyState" class="text-center py-16">
+                <div class="layered-bg p-12 max-w-md mx-auto">
+                    <div class="empty-state-icon text-gray-400 mb-6">
+                        <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-gray-300 mb-3 uppercase tracking-wide">NO SURVIVAL GAMES</h3>
+                    <p class="text-gray-500 font-mono text-xs mb-6 uppercase tracking-widest">NO SURVIVAL GAMES IN REPOSITORY</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RPG Category Section -->
+        <div id="rpgSection" class="hidden">
+            <div class="layered-bg p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-glow mb-2 uppercase tracking-wide">RPG GAMES</h2>
+                        <p class="text-primary font-mono">Build characters, level up skills, and embark on epic quests in rich fantasy worlds.</p>
+                    </div>
+                    <button onclick="switchTab('categories')" class="neo-button px-6 py-3 font-mono text-xs uppercase tracking-wider">
+                        ← BACK TO CATEGORIES
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <select id="rpgSortFilter" class="neo-input text-white px-3 py-2 font-mono text-xs uppercase tracking-wide focus:outline-none">
+                        <option value="name">SORT: NAME</option>
+                        <option value="date">SORT: DATE</option>
+                        <option value="size">SORT: SIZE</option>
+                    </select>
+                    <p id="rpgGameCount" class="text-gray-400 font-mono text-xs uppercase tracking-widest">0 ENTRIES FOUND</p>
+                </div>
+            </div>
+            <div id="rpgGameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- RPG games will be populated here -->
+            </div>
+            <div id="rpgEmptyState" class="text-center py-16">
+                <div class="layered-bg p-12 max-w-md mx-auto">
+                    <div class="empty-state-icon text-gray-400 mb-6">
+                        <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-gray-300 mb-3 uppercase tracking-wide">NO RPG GAMES</h3>
+                    <p class="text-gray-500 font-mono text-xs mb-6 uppercase tracking-widest">NO RPG GAMES IN REPOSITORY</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adventure Category Section -->
+        <div id="adventureSection" class="hidden">
+            <div class="layered-bg p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-glow mb-2 uppercase tracking-wide">ADVENTURE GAMES</h2>
+                        <p class="text-primary font-mono">Explore mysterious locations, solve puzzles, and uncover secrets in classic adventures.</p>
+                    </div>
+                    <button onclick="switchTab('categories')" class="neo-button px-6 py-3 font-mono text-xs uppercase tracking-wider">
+                        ← BACK TO CATEGORIES
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <select id="adventureSortFilter" class="neo-input text-white px-3 py-2 font-mono text-xs uppercase tracking-wide focus:outline-none">
+                        <option value="name">SORT: NAME</option>
+                        <option value="date">SORT: DATE</option>
+                        <option value="size">SORT: SIZE</option>
+                    </select>
+                    <p id="adventureGameCount" class="text-gray-400 font-mono text-xs uppercase tracking-widest">0 ENTRIES FOUND</p>
+                </div>
+            </div>
+            <div id="adventureGameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Adventure games will be populated here -->
+            </div>
+            <div id="adventureEmptyState" class="text-center py-16">
+                <div class="layered-bg p-12 max-w-md mx-auto">
+                    <div class="empty-state-icon text-gray-400 mb-6">
+                        <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-gray-300 mb-3 uppercase tracking-wide">NO ADVENTURE GAMES</h3>
+                    <p class="text-gray-500 font-mono text-xs mb-6 uppercase tracking-widest">NO ADVENTURE GAMES IN REPOSITORY</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Narrative Category Section -->
+        <div id="narrativeSection" class="hidden">
+            <div class="layered-bg p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-glow mb-2 uppercase tracking-wide">NARRATIVE GAMES</h2>
+                        <p class="text-primary font-mono">Experience rich storytelling with branching narratives and meaningful character choices.</p>
+                    </div>
+                    <button onclick="switchTab('categories')" class="neo-button px-6 py-3 font-mono text-xs uppercase tracking-wider">
+                        ← BACK TO CATEGORIES
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mb-6">
+                    <select id="narrativeSortFilter" class="neo-input text-white px-3 py-2 font-mono text-xs uppercase tracking-wide focus:outline-none">
+                        <option value="name">SORT: NAME</option>
+                        <option value="date">SORT: DATE</option>
+                        <option value="size">SORT: SIZE</option>
+                    </select>
+                    <p id="narrativeGameCount" class="text-gray-400 font-mono text-xs uppercase tracking-widest">0 ENTRIES FOUND</p>
+                </div>
+            </div>
+            <div id="narrativeGameGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Narrative games will be populated here -->
+            </div>
+            <div id="narrativeEmptyState" class="text-center py-16">
+                <div class="layered-bg p-12 max-w-md mx-auto">
+                    <div class="empty-state-icon text-gray-400 mb-6">
+                        <svg class="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-gray-300 mb-3 uppercase tracking-wide">NO NARRATIVE GAMES</h3>
+                    <p class="text-gray-500 font-mono text-xs mb-6 uppercase tracking-widest">NO NARRATIVE GAMES IN REPOSITORY</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Game Modal -->
+    <div id="gameModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-lg w-full max-w-6xl h-5/6 flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <h3 id="modalGameTitle" class="text-xl font-semibold">Game Title</h3>
+                <button id="closeModal" class="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div class="flex-1 p-4">
+                <iframe id="gameFrame" class="w-full h-full border-0 rounded-lg bg-white" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Game library state
+        let games = [];
+        let filteredGames = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadGamesFromRepo();
+        });
+
+        function setupEventListeners() {
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', loadGamesFromRepo);
+            
+            // Modal controls
+            document.getElementById('closeModal').addEventListener('click', closeGameModal);
+            document.getElementById('gameModal').addEventListener('click', function(e) {
+                if (e.target === this) closeGameModal();
+            });
+
+            // Tab navigation
+            document.querySelectorAll('.tab-line').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+        }
+
+        async function loadGamesFromRepo() {
+            showLoading();
+            
+            try {
+                // This would typically scan a games/ folder in your repository
+                // For demo purposes, we'll simulate loading games
+                await simulateGameLoading();
+                
+                hideLoading();
+                renderGames();
+            } catch (error) {
+                console.error('Error loading games:', error);
+                hideLoading();
+                showEmptyState();
+            }
+        }
+
+        async function simulateGameLoading() {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Initialize empty games array - add your actual file scanning logic here
+            games = [];
+            filteredGames = [...games];
+        }
+
+        function renderGames() {
+            // This function is no longer needed since we don't have a general game library
+            // Games are now rendered per category in renderCategoryGames()
+        }
+
+        function playGame(filename, gameName) {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameFrame');
+            const title = document.getElementById('modalGameTitle');
+            
+            // In a real implementation, this would load from your games/ folder
+            // iframe.src = `./games/${filename}`;
+            iframe.src = `data:text/html,<html><body style="font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0;"><h1>Loading ${gameName}...</h1><p>Game file: ${filename}</p><p>In a real implementation, this would load the actual HTML game file from your repository's games/ folder.</p><div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #5D5CDE;"><strong>Implementation Note:</strong><br>Replace this iframe src with the actual path to your game files, like:<br><code>iframe.src = './games/' + filename;</code></div></body></html>`;
+            
+            title.textContent = gameName;
+            modal.classList.remove('hidden');
+        }
+
+        function closeGameModal() {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameFrame');
+            
+            modal.classList.add('hidden');
+            iframe.src = '';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            // No longer needed since we don't have a general empty state
+        }
+
+        function switchTab(tabName) {
+            // Hide all sections
+            document.getElementById('overviewSection').classList.add('hidden');
+            document.getElementById('categoriesSection').classList.add('hidden');
+            document.getElementById('survivalSection').classList.add('hidden');
+            document.getElementById('rpgSection').classList.add('hidden');
+            document.getElementById('adventureSection').classList.add('hidden');
+            document.getElementById('narrativeSection').classList.add('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+            
+            // Update active tab
+            document.querySelectorAll('.tab-line').forEach(btn => {
+                btn.classList.remove('active', 'text-primary');
+                btn.classList.add('text-gray-400');
+            });
+            
+            // Only update tab styling for actual tabs (not category sections)
+            if (tabName === 'overview' || tabName === 'categories') {
+                const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+                if (activeTab) {
+                    activeTab.classList.add('active', 'text-primary');
+                    activeTab.classList.remove('text-gray-400');
+                }
+            }
+            
+            // Show appropriate section
+            switch(tabName) {
+                case 'overview':
+                    document.getElementById('overviewSection').classList.remove('hidden');
+                    updateOverviewStats();
+                    break;
+                case 'categories':
+                    document.getElementById('categoriesSection').classList.remove('hidden');
+                    updateCategoryCounts();
+                    break;
+                case 'survival':
+                    document.getElementById('survivalSection').classList.remove('hidden');
+                    renderCategoryGames('survival');
+                    break;
+                case 'rpg':
+                    document.getElementById('rpgSection').classList.remove('hidden');
+                    renderCategoryGames('rpg');
+                    break;
+                case 'adventure':
+                    document.getElementById('adventureSection').classList.remove('hidden');
+                    renderCategoryGames('adventure');
+                    break;
+                case 'narrative':
+                    document.getElementById('narrativeSection').classList.remove('hidden');
+                    renderCategoryGames('narrative');
+                    break;
+            }
+        }
+
+        function renderCategoryGames(genre) {
+            const categoryGames = games.filter(game => game.genre.toLowerCase() === genre);
+            const gameGrid = document.getElementById(`${genre}GameGrid`);
+            const gameCount = document.getElementById(`${genre}GameCount`);
+            const emptyState = document.getElementById(`${genre}EmptyState`);
+            
+            if (categoryGames.length === 0) {
+                gameGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                gameCount.textContent = '0 ENTRIES FOUND';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            gameGrid.innerHTML = categoryGames.map(game => `
+                <div class="game-card cursor-pointer" 
+                     onclick="playGame('${game.filename}', '${game.name}')">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-display font-medium text-white truncate flex-1 uppercase tracking-wide">${game.name}</h3>
+                            <span class="genre-badge text-xs px-3 py-1 ml-3 font-mono tracking-wider">${game.genre.toUpperCase()}</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-6 font-mono leading-relaxed">${game.description}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-500 font-mono mb-4">
+                            <span class="tracking-wider">${game.size}</span>
+                            <span class="tracking-wider">${new Date(game.date).toLocaleDateString()}</span>
+                        </div>
+                        <button class="neo-button w-full text-white py-3 font-mono text-xs uppercase tracking-wider">
+                            EXECUTE
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            gameCount.textContent = `${categoryGames.length} ENTR${categoryGames.length !== 1 ? 'IES' : 'Y'} FOUND`;
+        }
+
+        function updateOverviewStats() {
+            document.getElementById('totalGamesCount').textContent = games.length;
+            
+            if (games.length > 0) {
+                const latestDate = new Date(Math.max(...games.map(game => new Date(game.date))));
+                document.getElementById('lastUpdated').textContent = latestDate.toLocaleDateString();
+            } else {
+                document.getElementById('lastUpdated').textContent = '--/--/----';
+            }
+        }
+
+        function updateCategoryCounts() {
+            const genres = ['survival', 'rpg', 'adventure', 'narrative'];
+            
+            genres.forEach(genre => {
+                const count = games.filter(game => game.genre.toLowerCase() === genre).length;
+                const element = document.getElementById(`${genre}Count`);
+                if (element) {
+                    element.textContent = `${count} GAME${count !== 1 ? 'S' : ''}`;
+                }
+            });
+        }
+
+        function filterByGenre(genre) {
+            // Switch to the specific category section
+            switchTab(genre);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('gameModal').classList.contains('hidden')) {
+                closeGameModal();
+            }
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+    </script>
+
+
+</body></html>
