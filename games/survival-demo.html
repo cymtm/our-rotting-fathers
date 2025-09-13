@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desert Survival - Survival Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #d4a574, #f4e4bc, #d4a574);
+            color: #5d4e37;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(139, 69, 19, 0.3);
+            border: 2px solid rgba(139, 69, 19, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #8b4513;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: rgba(139, 69, 19, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(139, 69, 19, 0.2);
+            text-align: center;
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #8b4513;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .stat-bar {
+            background: rgba(0, 0, 0, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .stat-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .water-fill { background: linear-gradient(90deg, #ff4444, #ffaa44, #4444ff); }
+        .food-fill { background: linear-gradient(90deg, #ff4444, #ffaa44, #44ff44); }
+        .energy-fill { background: linear-gradient(90deg, #ff4444, #ffaa44, #ffff44); }
+        .scenario {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #8b4513;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .scenario-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .action-btn {
+            background: linear-gradient(145deg, #d4a574, #c49464);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: #5d4e37;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .action-btn:hover {
+            background: linear-gradient(145deg, #c49464, #b48454);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .action-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .inventory {
+            background: rgba(139, 69, 19, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .inventory h3 {
+            margin: 0 0 10px 0;
+            color: #8b4513;
+        }
+        .items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            border: 1px solid rgba(139, 69, 19, 0.3);
+        }
+        .day-counter {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #8b4513;
+            margin: 20px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .game-over {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 3px solid #8b4513;
+        }
+        .restart-btn {
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .restart-btn:hover {
+            background: #704011;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏜️ Desert Survival 🏜️</h1>
+        
+        <div class="day-counter">
+            Day <span id="day">1</span> - <span id="time">Morning</span>
+        </div>
+        
+        <div class="status-panel">
+            <div class="stat-card">
+                <div class="stat-label">💧 Water</div>
+                <div class="stat-value" id="water">100</div>
+                <div class="stat-bar">
+                    <div class="stat-fill water-fill" id="water-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🍞 Food</div>
+                <div class="stat-value" id="food">100</div>
+                <div class="stat-bar">
+                    <div class="stat-fill food-fill" id="food-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚡ Energy</div>
+                <div class="stat-value" id="energy">100</div>
+                <div class="stat-bar">
+                    <div class="stat-fill energy-fill" id="energy-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🌡️ Temperature</div>
+                <div class="stat-value" id="temperature">Hot</div>
+            </div>
+        </div>
+        
+        <div class="inventory">
+            <h3>📦 Inventory</h3>
+            <div class="items" id="inventory">
+                <div class="item">🎒 Backpack</div>
+            </div>
+        </div>
+        
+        <div class="scenario">
+            <div class="scenario-text" id="scenario-text">
+                Your plane crashed in the middle of a vast desert. You managed to escape with just 
+                your backpack, but the wreckage is burning and you need to get away quickly. 
+                The sun is blazing overhead and you can see nothing but sand dunes in every direction. 
+                You need to find water, food, and shelter to survive until rescue arrives.
+            </div>
+            
+            <div class="actions" id="actions">
+                <button class="action-btn" onclick="takeAction('search_wreckage')">
+                    🔍 Search the wreckage for supplies
+                </button>
+                <button class="action-btn" onclick="takeAction('find_shade')">
+                    🌴 Look for shade or shelter
+                </button>
+                <button class="action-btn" onclick="takeAction('conserve_energy')">
+                    😴 Rest and conserve energy
+                </button>
+                <button class="action-btn" onclick="takeAction('explore')">
+                    🚶 Explore the area
+                </button>
+            </div>
+        </div>
+        
+        <div id="game-over" class="game-over" style="display: none;">
+            <h2 id="game-over-title">Game Over!</h2>
+            <p id="ending-text"></p>
+            <div id="survival-stats"></div>
+            <button class="restart-btn" onclick="restartGame()">🔄 Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            day: 1,
+            time: 'morning', // morning, afternoon, evening, night
+            water: 100,
+            food: 100,
+            energy: 100,
+            inventory: ['backpack'],
+            temperature: 'hot',
+            scenario: 'start',
+            actions: 0,
+            survived: false
+        };
+
+        const timeOfDay = ['morning', 'afternoon', 'evening', 'night'];
+        let timeIndex = 0;
+
+        const scenarios = {
+            wreckage_search: {
+                text: "You brave the heat and smoke to search the wreckage. You find a water bottle, some energy bars, and a signal flare! But the effort has exhausted you.",
+                actions: [
+                    { text: "🔥 Use the signal flare immediately", action: "use_flare" },
+                    { text: "💾 Save the flare for later", action: "save_flare" },
+                    { text: "🌴 Look for shade to rest", action: "find_shade" }
+                ]
+            },
+            found_oasis: {
+                text: "Incredible! You've found a small oasis with palm trees and a spring of fresh water. This could be your salvation!",
+                actions: [
+                    { text: "💧 Drink deeply and refill containers", action: "drink_water" },
+                    { text: "🏕️ Set up camp here", action: "make_camp" },
+                    { text: "🔥 Build a signal fire", action: "signal_fire" }
+                ]
+            },
+            sandstorm: {
+                text: "A massive sandstorm is approaching! You can see the wall of sand rolling toward you. You need to take shelter immediately!",
+                actions: [
+                    { text: "🪨 Find rocky shelter", action: "rock_shelter" },
+                    { text: "🎒 Cover yourself with backpack", action: "backpack_shelter" },
+                    { text: "🏃 Try to outrun the storm", action: "run_storm" }
+                ]
+            }
+        };
+
+        function takeAction(action) {
+            gameState.actions++;
+            
+            // Consume resources based on time and activity
+            let waterLoss = 5;
+            let foodLoss = 3;
+            let energyLoss = 10;
+            
+            if (gameState.temperature === 'blazing') {
+                waterLoss *= 2;
+                energyLoss *= 1.5;
+            }
+            
+            switch(action) {
+                case 'search_wreckage':
+                    gameState.water -= waterLoss * 2;
+                    gameState.energy -= energyLoss * 2;
+                    gameState.food -= foodLoss;
+                    
+                    if (Math.random() > 0.3) {
+                        gameState.inventory.push('water bottle', 'energy bars', 'signal flare');
+                        gameState.water = Math.min(100, gameState.water + 40);
+                        gameState.food = Math.min(100, gameState.food + 30);
+                        changeScenario('wreckage_search');
+                    } else {
+                        showMessage("The wreckage is too dangerous to search thoroughly. You retreat without finding much.");
+                    }
+                    break;
+                    
+                case 'find_shade':
+                    gameState.water -= Math.floor(waterLoss / 2);
+                    gameState.energy = Math.min(100, gameState.energy + 20);
+                    gameState.temperature = 'warm';
+                    showMessage("You find some shade behind a large rock formation. The cooler temperature helps you recover some energy.");
+                    break;
+                    
+                case 'conserve_energy':
+                    gameState.water -= waterLoss;
+                    gameState.food -= foodLoss * 2;
+                    gameState.energy = Math.min(100, gameState.energy + 30);
+                    showMessage("You rest in what shade you can find. You feel more energetic, but hungrier.");
+                    break;
+                    
+                case 'explore':
+                    gameState.water -= waterLoss * 2;
+                    gameState.energy -= energyLoss * 2;
+                    gameState.food -= foodLoss;
+                    
+                    const exploreRoll = Math.random();
+                    if (exploreRoll > 0.7) {
+                        changeScenario('found_oasis');
+                    } else if (exploreRoll > 0.4) {
+                        gameState.inventory.push('cactus fruit');
+                        gameState.food = Math.min(100, gameState.food + 15);
+                        gameState.water = Math.min(100, gameState.water + 10);
+                        showMessage("You found a barrel cactus! You carefully extract some water and edible fruit.");
+                    } else if (exploreRoll > 0.2) {
+                        showMessage("You walk for hours but find nothing except more sand. The journey has exhausted you.");
+                    } else {
+                        changeScenario('sandstorm');
+                    }
+                    break;
+                    
+                case 'use_flare':
+                    if (gameState.inventory.includes('signal flare')) {
+                        gameState.inventory = gameState.inventory.filter(item => item !== 'signal flare');
+                        if (Math.random() > 0.4) {
+                            gameWin("A search helicopter saw your flare and rescued you!");
+                            return;
+                        } else {
+                            showMessage("The flare burns brightly, but no one seems to see it. You'll have to keep surviving.");
+                        }
+                    }
+                    break;
+                    
+                case 'drink_water':
+                    gameState.water = 100;
+                    gameState.energy = Math.min(100, gameState.energy + 30);
+                    showMessage("The fresh water is life-saving! You feel completely refreshed and hopeful.");
+                    break;
+                    
+                case 'make_camp':
+                    gameState.energy = 100;
+                    gameState.temperature = 'comfortable';
+                    showMessage("You set up a comfortable camp by the oasis. This is the perfect place to wait for rescue!");
+                    if (gameState.day >= 3) {
+                        setTimeout(() => {
+                            gameWin("After camping at the oasis for several days, a search team finally found you! You survived!");
+                        }, 2000);
+                        return;
+                    }
+                    break;
+                    
+                case 'signal_fire':
+                    gameState.energy -= 20;
+                    if (Math.random() > 0.5) {
+                        gameWin("Your signal fire was spotted by a rescue plane! You're saved!");
+                        return;
+                    } else {
+                        showMessage("You build a large fire that creates a column of smoke, but no rescue comes yet. Keep surviving!");
+                    }
+                    break;
+            }
+            
+            advanceTime();
+            updateDisplay();
+            checkGameState();
+        }
+
+        function changeScenario(scenarioKey) {
+            const scenario = scenarios[scenarioKey];
+            document.getElementById('scenario-text').textContent = scenario.text;
+            
+            const actionsDiv = document.getElementById('actions');
+            actionsDiv.innerHTML = '';
+            
+            scenario.actions.forEach(actionData => {
+                const button = document.createElement('button');
+                button.className = 'action-btn';
+                button.textContent = actionData.text;
+                button.onclick = () => takeAction(actionData.action);
+                actionsDiv.appendChild(button);
+            });
+        }
+
+        function showMessage(message) {
+            document.getElementById('scenario-text').textContent = message;
+            
+            // Reset to default actions after a message
+            setTimeout(() => {
+                resetDefaultActions();
+            }, 3000);
+        }
+
+        function resetDefaultActions() {
+            document.getElementById('actions').innerHTML = `
+                <button class="action-btn" onclick="takeAction('find_shade')">🌴 Look for shade</button>
+                <button class="action-btn" onclick="takeAction('conserve_energy')">😴 Rest</button>
+                <button class="action-btn" onclick="takeAction('explore')">🚶 Explore area</button>
+                <button class="action-btn ${gameState.inventory.includes('signal flare') ? '' : 'disabled'}" 
+                        onclick="takeAction('use_flare')" 
+                        ${gameState.inventory.includes('signal flare') ? '' : 'disabled'}>
+                    🔥 Use signal flare
+                </button>
+            `;
+        }
+
+        function advanceTime() {
+            timeIndex++;
+            if (timeIndex >= timeOfDay.length) {
+                timeIndex = 0;
+                gameState.day++;
+            }
+            gameState.time = timeOfDay[timeIndex];
+            
+            // Temperature changes based on time
+            if (gameState.time === 'afternoon') {
+                gameState.temperature = 'blazing';
+            } else if (gameState.time === 'night') {
+                gameState.temperature = 'cold';
+            } else {
+                gameState.temperature = gameState.temperature === 'comfortable' ? 'comfortable' : 'hot';
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('day').textContent = gameState.day;
+            document.getElementById('time').textContent = gameState.time.charAt(0).toUpperCase() + gameState.time.slice(1);
+            document.getElementById('water').textContent = Math.max(0, gameState.water);
+            document.getElementById('food').textContent = Math.max(0, gameState.food);
+            document.getElementById('energy').textContent = Math.max(0, gameState.energy);
+            document.getElementById('temperature').textContent = gameState.temperature.charAt(0).toUpperCase() + gameState.temperature.slice(1);
+            
+            document.getElementById('water-bar').style.width = Math.max(0, gameState.water) + '%';
+            document.getElementById('food-bar').style.width = Math.max(0, gameState.food) + '%';
+            document.getElementById('energy-bar').style.width = Math.max(0, gameState.energy) + '%';
+            
+            document.getElementById('inventory').innerHTML = gameState.inventory.map(item => 
+                `<div class="item">${item}</div>`
+            ).join('');
+        }
+
+        function checkGameState() {
+            if (gameState.water <= 0) {
+                gameOver("You died of dehydration under the scorching desert sun.");
+            } else if (gameState.food <= 0) {
+                gameOver("You starved to death in the harsh desert.");
+            } else if (gameState.energy <= 0) {
+                gameOver("You collapsed from exhaustion and couldn't continue.");
+            } else if (gameState.day >= 7) {
+                gameWin("Incredible! You survived 7 days in the desert and were finally rescued by a search team!");
+            }
+        }
+
+        function gameOver(message) {
+            document.getElementById('game-over-title').textContent = "Game Over";
+            document.getElementById('game-over-title').style.color = '#ff4444';
+            document.getElementById('ending-text').textContent = message;
+            document.getElementById('survival-stats').innerHTML = `
+                <p><strong>You survived ${gameState.day} day(s) in the desert.</strong></p>
+                <p>Actions taken: ${gameState.actions}</p>
+            `;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function gameWin(message) {
+            document.getElementById('game-over-title').textContent = "Rescued!";
+            document.getElementById('game-over-title').style.color = '#44aa44';
+            document.getElementById('ending-text').textContent = message;
+            document.getElementById('survival-stats').innerHTML = `
+                <p><strong>🎉 Congratulations! You survived ${gameState.day} day(s)! 🎉</strong></p>
+                <p>Actions taken: ${gameState.actions}</p>
+                <p>Final status: Water ${gameState.water}, Food ${gameState.food}, Energy ${gameState.energy}</p>
+            `;
+            document.getElementById('game-over').style.display = 'block';
+            gameState.survived = true;
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost in the Forest - Adventure Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a3329, #2d5a3d);
+            color: #e8f5e8;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            margin-bottom: 30px;
+        }
+        .story-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        .choices {
+            margin: 20px 0;
+        }
+        .choice {
+            display: block;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            color: #e8f5e8;
+            padding: 12px 20px;
+            margin: 10px 0;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .choice:hover {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: rgba(0, 255, 0, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+        }
+        .stats {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 3px solid #00ff00;
+        }
+        .stat-bar {
+            background: rgba(0, 0, 0, 0.5);
+            height: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            transition: width 0.5s ease;
+        }
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.5);
+            color: #e8f5e8;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .restart-btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌲 Lost in the Forest 🌲</h1>
+        
+        <div class="stats" id="stats">
+            <div><strong>Health:</strong> <span id="health">100</span>/100</div>
+            <div class="stat-bar"><div class="stat-fill" id="health-bar" style="width: 100%"></div></div>
+            
+            <div><strong>Hunger:</strong> <span id="hunger">100</span>/100</div>
+            <div class="stat-bar"><div class="stat-fill" id="hunger-bar" style="width: 100%"></div></div>
+            
+            <div><strong>Items:</strong> <span id="items">None</span></div>
+        </div>
+        
+        <div class="story-text" id="story">
+            You wake up in a dense, dark forest with no memory of how you got here. 
+            The canopy above blocks most of the sunlight, and strange sounds echo 
+            through the trees. Your stomach growls - you're getting hungry. 
+            What do you do?
+        </div>
+        
+        <div class="choices" id="choices">
+            <button class="choice" onclick="makeChoice('search')">🔍 Search for food or water</button>
+            <button class="choice" onclick="makeChoice('shelter')">🏠 Look for shelter</button>
+            <button class="choice" onclick="makeChoice('explore')">🚶 Explore deeper into the forest</button>
+            <button class="choice" onclick="makeChoice('wait')">⏳ Wait and listen for sounds</button>
+        </div>
+        
+        <div id="game-over" class="game-over" style="display: none;">
+            <h2>Game Over!</h2>
+            <p id="ending-text"></p>
+            <button class="restart-btn" onclick="restartGame()">🔄 Restart Adventure</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            health: 100,
+            hunger: 100,
+            items: [],
+            location: 'forest_start',
+            moves: 0
+        };
+
+        const scenarios = {
+            forest_start: {
+                story: "You wake up in a dense, dark forest with no memory of how you got here. The canopy above blocks most of the sunlight, and strange sounds echo through the trees. Your stomach growls - you're getting hungry. What do you do?",
+                choices: [
+                    { text: "🔍 Search for food or water", action: "search" },
+                    { text: "🏠 Look for shelter", action: "shelter" },
+                    { text: "🚶 Explore deeper into the forest", action: "explore" },
+                    { text: "⏳ Wait and listen for sounds", action: "wait" }
+                ]
+            },
+            found_berries: {
+                story: "You find a bush with dark purple berries! They look delicious but you're not sure if they're safe to eat. Your hunger is growing stronger.",
+                choices: [
+                    { text: "🍇 Eat the berries", action: "eat_berries" },
+                    { text: "🔬 Examine them more closely", action: "examine_berries" },
+                    { text: "🚶 Leave them and continue searching", action: "continue_search" }
+                ]
+            },
+            found_stream: {
+                story: "You hear the sound of running water and discover a clear mountain stream! The water looks clean and refreshing.",
+                choices: [
+                    { text: "💧 Drink from the stream", action: "drink_water" },
+                    { text: "🐟 Look for fish in the stream", action: "fish" },
+                    { text: "🚶 Follow the stream downstream", action: "follow_stream" }
+                ]
+            },
+            cave_shelter: {
+                story: "You find a small cave that could provide shelter. It's dark inside, but it looks dry and protected from the elements.",
+                choices: [
+                    { text: "🕯️ Enter the cave", action: "enter_cave" },
+                    { text: "🔥 Build a fire outside the cave", action: "build_fire" },
+                    { text: "🚶 Look for a different shelter", action: "find_shelter" }
+                ]
+            }
+        };
+
+        function makeChoice(action) {
+            gameState.moves++;
+            gameState.hunger = Math.max(0, gameState.hunger - 5);
+            
+            switch(action) {
+                case 'search':
+                    if (Math.random() > 0.5) {
+                        changeScenario('found_berries');
+                    } else {
+                        changeScenario('found_stream');
+                    }
+                    break;
+                    
+                case 'shelter':
+                    changeScenario('cave_shelter');
+                    break;
+                    
+                case 'explore':
+                    gameState.health -= 10;
+                    if (Math.random() > 0.7) {
+                        showStory("You get lost deeper in the forest and injure yourself on thorns. You're now more lost than before!");
+                        if (gameState.health <= 0) {
+                            gameOver("You succumbed to your injuries in the wilderness.");
+                        }
+                    } else {
+                        showStory("You find an interesting clearing, but no immediate resources.");
+                    }
+                    break;
+                    
+                case 'wait':
+                    if (Math.random() > 0.6) {
+                        showStory("You hear the distant sound of a rescue helicopter! You wave and shout, and they spot you!");
+                        gameWin("Rescued! You were found by a search team and safely returned to civilization.");
+                    } else {
+                        showStory("Time passes, but nothing happens. You're getting hungrier.");
+                        gameState.hunger -= 10;
+                    }
+                    break;
+                    
+                case 'eat_berries':
+                    if (Math.random() > 0.4) {
+                        gameState.hunger = Math.min(100, gameState.hunger + 30);
+                        gameState.items.push('Energy');
+                        showStory("The berries are delicious and give you energy! You feel much better.");
+                    } else {
+                        gameState.health -= 30;
+                        showStory("The berries were poisonous! You feel sick and weak.");
+                        if (gameState.health <= 0) {
+                            gameOver("The poisonous berries were too much for your system.");
+                        }
+                    }
+                    break;
+                    
+                case 'drink_water':
+                    gameState.hunger = Math.min(100, gameState.hunger + 20);
+                    gameState.items.push('Hydration');
+                    showStory("The fresh water restores your energy and helps clear your mind. You feel refreshed!");
+                    break;
+                    
+                case 'enter_cave':
+                    if (Math.random() > 0.5) {
+                        gameState.items.push('Safe Shelter');
+                        showStory("The cave is perfect! You're protected from the elements and can rest safely. You hear a helicopter in the distance...");
+                        setTimeout(() => {
+                            gameWin("Safe in the cave, you were spotted by searchers and rescued!");
+                        }, 2000);
+                    } else {
+                        gameState.health -= 20;
+                        showStory("There's a bear in the cave! You quickly retreat but get scratched in the process.");
+                    }
+                    break;
+            }
+            
+            updateStats();
+            
+            if (gameState.hunger <= 0) {
+                gameOver("You died of starvation in the wilderness.");
+            }
+        }
+
+        function changeScenario(scenarioKey) {
+            const scenario = scenarios[scenarioKey];
+            document.getElementById('story').textContent = scenario.story;
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            scenario.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.className = 'choice';
+                button.textContent = choice.text;
+                button.onclick = () => makeChoice(choice.action);
+                choicesDiv.appendChild(button);
+            });
+        }
+
+        function showStory(text) {
+            document.getElementById('story').textContent = text;
+            document.getElementById('choices').innerHTML = `
+                <button class="choice" onclick="location.reload()">🔄 Continue Adventure</button>
+            `;
+        }
+
+        function updateStats() {
+            document.getElementById('health').textContent = gameState.health;
+            document.getElementById('hunger').textContent = gameState.hunger;
+            document.getElementById('items').textContent = gameState.items.length > 0 ? gameState.items.join(', ') : 'None';
+            
+            document.getElementById('health-bar').style.width = gameState.health + '%';
+            document.getElementById('hunger-bar').style.width = gameState.hunger + '%';
+        }
+
+        function gameOver(message) {
+            document.getElementById('ending-text').textContent = message;
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('choices').style.display = 'none';
+        }
+
+        function gameWin(message) {
+            document.getElementById('ending-text').textContent = message;
+            document.getElementById('ending-text').style.color = '#00ff00';
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('game-over').style.background = 'rgba(0, 255, 0, 0.1)';
+            document.getElementById('game-over').style.borderColor = 'rgba(0, 255, 0, 0.3)';
+            document.getElementById('choices').style.display = 'none';
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
