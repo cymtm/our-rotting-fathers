@@ -599,14 +599,32 @@
             // Simulate API call delay
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Initialize empty games array - add your actual file scanning logic here
-            games = [];
+            // Initialize games array with actual games
+            games = [
+                {
+                    name: "Lost in the Forest",
+                    description: "A text-based adventure where you must survive in a mysterious forest. Make choices that determine your fate as you search for food, shelter, and a way out.",
+                    filename: "adventure-demo.html",
+                    genre: "Adventure",
+                    size: "13 KB",
+                    date: "2024-01-15"
+                },
+                {
+                    name: "Desert Survival",
+                    description: "Survive in the harsh desert after a plane crash. Manage your water, food, and energy while searching for rescue in this challenging survival experience.",
+                    filename: "survival-demo.html",
+                    genre: "Survival", 
+                    size: "21 KB",
+                    date: "2024-01-15"
+                }
+            ];
             filteredGames = [...games];
         }
 
         function renderGames() {
-            // This function is no longer needed since we don't have a general game library
-            // Games are now rendered per category in renderCategoryGames()
+            // Update overview stats and category counts
+            updateOverviewStats();
+            updateCategoryCounts();
         }
 
         function playGame(filename, gameName) {
@@ -614,9 +632,8 @@
             const iframe = document.getElementById('gameFrame');
             const title = document.getElementById('modalGameTitle');
             
-            // In a real implementation, this would load from your games/ folder
-            // iframe.src = `./games/${filename}`;
-            iframe.src = `data:text/html,<html><body style="font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0;"><h1>Loading ${gameName}...</h1><p>Game file: ${filename}</p><p>In a real implementation, this would load the actual HTML game file from your repository's games/ folder.</p><div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #5D5CDE;"><strong>Implementation Note:</strong><br>Replace this iframe src with the actual path to your game files, like:<br><code>iframe.src = './games/' + filename;</code></div></body></html>`;
+            // Load the actual game file from the games/ folder
+            iframe.src = `./games/${filename}`;
             
             title.textContent = gameName;
             modal.classList.remove('hidden');
